@@ -5,7 +5,7 @@ import random
 import tensorflow as tf
 from tensorflow import keras
 
-import numpy as numpy
+import numpy as np
 import math
 
 class Snake():
@@ -68,6 +68,9 @@ class Snake():
         return np.argmax(prediction)
 
     def get_snake_views(self):
+        def distance(a, b):
+            return math.sqrt( ((a[0]-b[0])**2)+((a[1]-b[1])**2) )
+
         #[food_dist, wall_dist, self_dist]
         def get_top_left_view(x, y):
             food_dist = -1
@@ -76,12 +79,12 @@ class Snake():
             for i in range(1, x):
                 current_search_pos = [x-i, y+i]
                 if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = numpy.linalg.norm([x, y] - current_search_pos)
+                    food_dist = distance([x, y], current_search_pos)
                 if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = numpy.linalg.norm([x, y] - current_search_pos)
+                    wall_dist = distance([x, y], current_search_pos)
                 if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
                     if self_dist == -1:
-                        self_dist = numpy.linalg.norm([x, y] - [current_search_pos])
+                        self_dist = distance([x, y], [current_search_pos])
 
             return [food_dist, wall_dist, self_dist]
 
@@ -91,13 +94,13 @@ class Snake():
             self_dist = -1
             for i in range(1, self.height - y + 1):
                 current_search_pos = [x, y+i]
-                if current_search_pos[0] == self.food_x and current_search_pos[1] == food_y:
-                    food_dist = numpy.linalg.norm([x, y] - current_search_pos)
+                if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
+                    food_dist = distance([x, y],  current_search_pos)
                 if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = numpy.linalg.norm([x, y] - current_search_pos)
+                    wall_dist = distance([x, y], current_search_pos)
                 if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
                     if self_dist == -1:
-                        self_dist = numpy.linalg.norm([x, y] - [current_search_pos])
+                        self_dist = distance([x, y], [current_search_pos])
 
             return [food_dist, wall_dist, self_dist]
 
@@ -108,14 +111,14 @@ class Snake():
             for i in range(1, self.width - x + 1):
                 current_search_pos = [x+i, y+i]
                 if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = numpy.linalg.norm([x, y] - current_search_pos)
+                    food_dist = distance([x, y], current_search_pos)
                 if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = numpy.linalg.norm([x, y] - current_search_pos)
+                    wall_dist = distance([x, y],  current_search_pos)
                 if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
                     if self_dist == -1:
-                        self_dist = numpy.linalg.norm([x, y] - [current_search_pos])
+                        self_dist = distance([x, y],  [current_search_pos])
 
-            wall_dist = numpy.linalg.norm([x, y] - [x, self.height])
+            wall_dist = distance([x, y], [x, self.height])
 
             return [food_dist, wall_dist, self_dist]
 
@@ -126,14 +129,14 @@ class Snake():
             for i in range(1, self.width - x + 1):
                 current_search_pos = [x+i, y]
                 if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = numpy.linalg.norm([x, y] - current_search_pos)
+                    food_dist = distance([x, y], current_search_pos)
                 if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = numpy.linalg.norm([x, y] - current_search_pos)
+                    wall_dist = distance([x, y], current_search_pos)
                 if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
                     if self_dist == -1:
-                        self_dist = numpy.linalg.norm([x, y] - [current_search_pos])
+                        self_dist = distance([x, y], [current_search_pos])
 
-            wall_dist = numpy.linalg.norm([x, y] - [x, self.height])
+            wall_dist = distance([x, y], [x, self.height])
 
             return [food_dist, wall_dist, self_dist]
 
@@ -144,14 +147,14 @@ class Snake():
             for i in range(x + 1, self.width):
                 current_search_pos = [x, y+1]
                 if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = numpy.linalg.norm([x, y] - current_search_pos)
+                    food_dist = distance([x, y], current_search_pos)
                 if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = numpy.linalg.norm([x, y] - current_search_pos)
+                    wall_dist = distance([x, y], current_search_pos)
                 if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
                     if self_dist == -1:
-                        self_dist = numpy.linalg.norm([x, y] - [current_search_pos])
+                        self_dist = distance([x, y], [current_search_pos])
 
-            wall_dist = numpy.linalg.norm([x, y] - [x, self.height])
+            wall_dist = distance([x, y], [x, self.height])
 
             return [food_dist, wall_dist, self_dist]
 
@@ -162,14 +165,14 @@ class Snake():
             for i in range(1, self.width - x + 1):
                 current_search_pos = [x+i, y-i]
                 if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = numpy.linalg.norm([x, y] - current_search_pos)
+                    food_dist = distance([x, y], current_search_pos)
                 if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = numpy.linalg.norm([x, y] - current_search_pos)
+                    wall_dist = distance([x, y], current_search_pos)
                 if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
                     if self_dist == -1:
-                        self_dist = numpy.linalg.norm([x, y] - [current_search_pos])
+                        self_dist = distance([x, y], [current_search_pos])
 
-            wall_dist = numpy.linalg.norm([x, y] - [x, self.height])
+            wall_dist = distance([x, y], [x, self.height])
 
             return [food_dist, wall_dist, self_dist]
 
@@ -180,14 +183,14 @@ class Snake():
             for i in range(1, y + 1):
                 current_search_pos = [x, y+i]
                 if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = numpy.linalg.norm([x, y] - current_search_pos)
+                    food_dist = distance([x, y], current_search_pos)
                 if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = numpy.linalg.norm([x, y] - current_search_pos)
+                    wall_dist = distance([x, y], current_search_pos)
                 if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
                     if self_dist == -1:
-                        self_dist = numpy.linalg.norm([x, y] - [current_search_pos])
+                        self_dist = distance([x, y], [current_search_pos])
 
-            wall_dist = numpy.linalg.norm([x, y] - [x, self.height])
+            wall_dist = distance([x, y], [x, self.height])
 
             return [food_dist, wall_dist, self_dist]
 
@@ -198,14 +201,14 @@ class Snake():
             for i in range(1, x + 1):
                 current_search_pos = [x-i, y-i]
                 if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = numpy.linalg.norm([x, y] - current_search_pos)
+                    food_dist = distance([x, y], current_search_pos)
                 if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = numpy.linalg.norm([x, y] - current_search_pos)
+                    wall_dist = distance([x, y], current_search_pos)
                 if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
                     if self_dist == -1:
-                        self_dist = numpy.linalg.norm([x, y] - [current_search_pos])
+                        self_dist = distance([x, y], [current_search_pos])
 
-            wall_dist = numpy.linalg.norm([x, y] - [x, self.height])
+            wall_dist = distance([x, y], [x, self.height])
 
             return [food_dist, wall_dist, self_dist]
 
@@ -215,15 +218,15 @@ class Snake():
             self_dist = -1
             for i in range(1, x + 1):
                 current_search_pos = [x-i, y]
-                if current_search_pos[0] == food_x and current_search_pos[1] == self.food_y:
-                    food_dist = numpy.linalg.norm([x, y] - current_search_pos)
+                if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
+                    food_dist = distance([x, y], current_search_pos)
                 if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = numpy.linalg.norm([x, y] - current_search_pos)
+                    wall_dist = distance([x, y], current_search_pos)
                 if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
                     if self_dist == -1:
-                        self_dist = numpy.linalg.norm([x, y] - [current_search_pos])
+                        self_dist = distance([x, y], [current_search_pos])
 
-            wall_dist = numpy.linalg.norm([x, y] - [x, self.height])
+            wall_dist = distance([x, y], [x, self.height])
 
             return [food_dist, wall_dist, self_dist]
 
@@ -311,9 +314,9 @@ class SnakeGame():
                     del snake.snake_list[0]
 
 
+            self.display.fill((0, 0, 0))
             for snake in self.snake_list:
                 # reset everything to black before drawing
-                self.display.fill((0, 0, 0))
 
                 # draw snake
                 for pos in snake.snake_list:
