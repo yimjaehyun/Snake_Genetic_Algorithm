@@ -20,6 +20,7 @@ class Snake():
         self.y = height // 2
         self.x_change = 0
         self.y_change = 0
+        self.life_span = 0
 
         self.fitness = 0
 
@@ -31,10 +32,11 @@ class Snake():
     def create_model(self):
         model = keras.Sequential([
             keras.layers.Dense(24, activation='relu'),  # input layer
-            keras.layers.Dense(20, activation='relu'),  # hidden layer 1
-            keras.layers.Dense(12, activation='relu'),  # hidden layer 2
-            keras.layers.Dense(4, activation='softmax') # output layer
+            keras.layers.Dense(18, activation='relu'),  # hidden layer 1
+            keras.layers.Dense(18, activation='relu'),  # hidden layer 2
+            keras.layers.Dense(4, activation='sigmoid') # output layer
         ])
+
 
         model.compile(optimizer='adam',
                 loss='sparse_categorical_crossentropy',
@@ -63,37 +65,45 @@ class Snake():
     # left = 2
     # right = 3
     def get_next_move(self, snake_views):
-        input_data = np.asarray(snake_views)
+        input_data = np.asarray(snake_views).flatten()
         input_data = np.atleast_2d(input_data)
 
+
         prediction = self.nn.predict(input_data)[0]
+        x = ["up", "down", "left", "right"]
+        # print(x[np.argmax(prediction)])
+        # print(prediction)
         return np.argmax(prediction)
 
     def get_snake_views(self):
         def distance(a, b):
-            return math.sqrt( ((a[0]-b[0])**2)+((a[1]-b[1])**2) )
+            return math.sqrt( ((a[0]-b[0])**2)+((a[1]-b[1])**2) ) / self.height
 
+        def diagonal_distance(a,b):
+            return math.sqrt( ((a[0]-b[0])**2)+((a[1]-b[1])**2) ) / math.sqrt(self.height ** 2 + self.width ** 2)
+
+        #region get views
         #[food_dist, wall_dist, self_dist]
         def get_top_left_view(x, y):
-            food_dist = -1
-            wall_dist = -1
-            self_dist = -1
+            food_dist = 1
+            wall_dist = 1
+            self_dist = 1
             for i in range(0, x+10, 10):
                 current_search_pos = [x-i, y-i]
                 if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = distance([x, y], current_search_pos)
+                    food_dist = diagonal_distance([x, y], current_search_pos)
                 if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = distance([x, y], current_search_pos)
+                    wall_dist = diagonal_distance([x, y], current_search_pos)
                 if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
                     if self_dist == -1:
-                        self_dist = distance([x, y], [current_search_pos])
+                        self_dist = diagonal_distance([x, y], [current_search_pos])
 
             return [food_dist, wall_dist, self_dist]
 
         def get_top_view(x, y):
-            food_dist = -1
-            wall_dist = -1
-            self_dist = -1
+            food_dist = 1
+            wall_dist = 1
+            self_dist = 1
             for i in range(0, y + 10, 10):
                 current_search_pos = [x, y-i]
                 if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
@@ -107,25 +117,25 @@ class Snake():
             return [food_dist, wall_dist, self_dist]
 
         def get_top_right_view(x, y):
-            food_dist = -1
-            wall_dist = -1
-            self_dist = -1
+            food_dist = 1
+            wall_dist = 1
+            self_dist = 1
             for i in range(0, self.width - x + 10, 10):
                 current_search_pos = [x+i, y-i]
                 if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = distance([x, y], current_search_pos)
+                    food_dist = diagonal_distance([x, y], current_search_pos)
                 if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = distance([x, y],  current_search_pos)
+                    wall_dist = diagonal_distance([x, y],  current_search_pos)
                 if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
                     if self_dist == -1:
-                        self_dist = distance([x, y],  [current_search_pos])
+                        self_dist = diagonal_distance([x, y],  [current_search_pos])
 
             return [food_dist, wall_dist, self_dist]
 
         def get_right_view(x, y):
-            food_dist = -1
-            wall_dist = -1
-            self_dist = -1
+            food_dist = 1
+            wall_dist = 1
+            self_dist = 1
             for i in range(0, self.width - x + 10, 10):
                 current_search_pos = [x+i, y]
                 if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
@@ -139,25 +149,25 @@ class Snake():
             return [food_dist, wall_dist, self_dist]
 
         def get_bottom_right_view(x, y):
-            food_dist = -1
-            wall_dist = -1
-            self_dist = -1
+            food_dist = 1
+            wall_dist = 1
+            self_dist = 1
             for i in range(0, self.width - x + 10, 10):
                 current_search_pos = [x+i, y+i]
                 if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = distance([x, y], current_search_pos)
+                    food_dist = diagonal_distance([x, y], current_search_pos)
                 if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = distance([x, y], current_search_pos)
+                    wall_dist = diagonal_distance([x, y], current_search_pos)
                 if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
                     if self_dist == -1:
-                        self_dist = distance([x, y], [current_search_pos])
+                        self_dist = diagonal_distance([x, y], [current_search_pos])
 
             return [food_dist, wall_dist, self_dist]
 
         def get_bottom_view(x, y):
-            food_dist = -1
-            wall_dist = -1
-            self_dist = -1
+            food_dist = 1
+            wall_dist = 1
+            self_dist = 1
             for i in range(0, self.height - y + 10, 10):
                 current_search_pos = [x, y+i]
                 if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
@@ -171,25 +181,25 @@ class Snake():
             return [food_dist, wall_dist, self_dist]
 
         def get_bottom_left_view(x, y):
-            food_dist = -1
-            wall_dist = -1
-            self_dist = -1
+            food_dist = 1
+            wall_dist = 1
+            self_dist = 1
             for i in range(0, x + 10, 10):
                 current_search_pos = [x-i, y+i]
                 if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = distance([x, y], current_search_pos)
+                    food_dist = diagonal_distance([x, y], current_search_pos)
                 if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = distance([x, y], current_search_pos)
+                    wall_dist = diagonal_distance([x, y], current_search_pos)
                 if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
                     if self_dist == -1:
-                        self_dist = distance([x, y], [current_search_pos])
+                        self_dist = diagonal_distance([x, y], [current_search_pos])
 
             return [food_dist, wall_dist, self_dist]
 
         def get_left_view(x, y):
-            food_dist = -1
-            wall_dist = -1
-            self_dist = -1
+            food_dist = 1
+            wall_dist = 1
+            self_dist = 1
             for i in range(0, x + 10, 10):
                 current_search_pos = [x-i, y]
                 if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
@@ -202,15 +212,17 @@ class Snake():
 
             return [food_dist, wall_dist, self_dist]
 
-        return [get_top_left_view(self.x, self.y), get_top_view(self.x, self.y), get_top_right_view(self.x, self.y),
+        #endregion
+        
+        x =  [get_top_left_view(self.x, self.y), get_top_view(self.x, self.y), get_top_right_view(self.x, self.y),
                 get_left_view(self.x, self.y), get_right_view(self.x, self.y),
                 get_bottom_left_view(self.x, self.y), get_bottom_view(self.x, self.y), get_bottom_right_view(self.x, self.y)]
+        # x = [[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)]]
+        # print(x[0][0], x[1][0], x[2][0], x[3][0], x[4][0], x[5][0], x[6][0], x[7][0])
+        return x
 
     def get_fitness(self):
-        if self.is_dead:
-            return self.length_of_snake - 1 + self.fitness
-        else:
-            return self.length_of_snake + self.fitness
+        return self.life_span * self.life_span * 2 ** self.length_of_snake
 
     def is_colliding(self):
         return self.x >= self.width or self.x <= 0 or self.y >= self.height or self.y <= 0
@@ -218,7 +230,8 @@ class Snake():
     def is_eating_self(self):
         for pos in self.snake_list[:-1]:
             if pos[0] == self.x and pos[1] == self.y:
-                self.is_dead = True
+                return True
+        return False
     
     def update_movement(self):
         self.x += self.x_change
@@ -243,7 +256,6 @@ class SnakeGame():
         self.height = height
         self.snake_speed = snake_speed
         self.population = population
-        self.snake_list = self.snake_list_init()
 
         self.generations = generations
         self.life_span = life_span
@@ -253,6 +265,7 @@ class SnakeGame():
 
         self.x_change = 0
         self.y_change = 0
+        self.snake_list = self.snake_list_init()
 
     def snake_list_init(self):
         snake_list = []
@@ -260,122 +273,115 @@ class SnakeGame():
             snake_list.append(Snake(self.width, self.height))
         return snake_list
 
-    def run(self, current_generation, max_score):
+    def run(self, current_generation, max_score, snake_index):
         dead_snake_count = 0
         start_ticks = pygame.time.get_ticks()
-        seconds = ((pygame.time.get_ticks() - start_ticks) / 1000)
         timer = start_ticks
+        clock =pygame.time.Clock()
 
-        while seconds < self.life_span:
+        snake = self.snake_list[snake_index]
+        for step in range(self.life_span):
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.quit()
 
-            dead_snake_count = 0
-            for snake in self.snake_list:
-                if snake.is_dead:
-                    dead_snake_count += 1
-
-            if dead_snake_count >= len(self.snake_list):
+            if snake.is_dead:
                 break
 
-            # update snake movements
-            for snake in self.snake_list:
-                if snake.is_dead:
-                    continue
+            snake.is_dead = snake.is_colliding()
+            if not snake.is_dead:
+                snake.is_dead = snake.is_eating_self()
 
-                if snake.is_colliding():
+            next_move = snake.get_next_move(snake.get_snake_views())
+            if next_move == 0: # up
+                if snake.y_change == 10:
                     snake.is_dead = True
-                snake.is_eating_self()
+                    continue
+                snake.x_change = 0
+                snake.y_change = -10
+            elif next_move == 1: # down
+                if snake.y_change == -10:
+                    snake.is_dead = True
+                    continue
+                snake.x_change = 0
+                snake.y_change = 10
+            elif next_move == 2: # left
+                if snake.x_change == 10:
+                    snake.is_dead = True
+                    continue
+                snake.x_change = -10
+                snake.y_change = 0
+            elif next_move == 3: # right
+                if snake.x_change == -10:
+                    snake.is_dead = True
+                    continue
+                snake.x_change = 10
+                snake.y_change = 0
+            snake.update_movement()
 
+            snake.snake_list.append([snake.x, snake.y])
 
-                next_move = snake.get_next_move(snake.get_snake_views())
-                if next_move == 0: # up
-                    if snake.y_change == 10:
-                        snake.is_dead = True
-                        continue
-                    snake.x_change = 0
-                    snake.y_change = -10
-                elif next_move == 1: # down
-                    if snake.y_change == -10:
-                        snake.is_dead = True
-                        continue
-                    snake.x_change = 0
-                    snake.y_change = 10
-                elif next_move == 2: # left
-                    if snake.x_change == 10:
-                        snake.is_dead = True
-                        continue
-                    snake.x_change = -10
-                    snake.y_change = 0
-                elif next_move == 3: # right
-                    if snake.x_change == -10:
-                        snake.is_dead = True
-                        continue
-                    snake.x_change = 10
-                    snake.y_change = 0
-                snake.update_movement()
-
-                snake.snake_list.append([snake.x, snake.y])
-
-                # Remove last cube of the snake if we haven't eaten food
-                # length_of_snake is true reflection of current length
-                # snake_list should only have the number of cubes being displayed so we delete trailing one since we move forward
-                if len(snake.snake_list) > snake.length_of_snake:
-                    del snake.snake_list[0]
+            # Remove last cube of the snake if we haven't eaten food
+            # length_of_snake is true reflection of current length
+            # snake_list should only have the number of cubes being displayed so we delete trailing one since we move forward
+            if len(snake.snake_list) > snake.length_of_snake:
+                del snake.snake_list[0]
 
             # update score 
             if pygame.time.get_ticks()-timer > 500:
                 timer = pygame.time.get_ticks()
-                for snake in self.snake_list:
-                    snake.fitness += 1
+                snake.fitness += 1
                 #do something every 1.5 seconds
 
             # draw snake
             # reset everything to black before drawing
             self.display.fill((0, 0, 0))
-            for snake in self.snake_list:
-                # draw snake
-                for pos in snake.snake_list:
-                    if not snake.is_dead:
-                        pygame.draw.rect(self.display, (255, 0, 0), [pos[0], pos[1], 10, 10])
+            for pos in snake.snake_list:
+                if not snake.is_dead:
+                    pygame.draw.rect(self.display, (255, 0, 0), [pos[0], pos[1], 10, 10])
 
-                # draw food
-                pygame.draw.rect(self.display, (255, 0, 255), [snake.food_x, snake.food_y, 10, 10])
+            # draw food
+            pygame.draw.rect(self.display, (255, 0, 255), [snake.food_x, snake.food_y, 10, 10])
 
-            value = pygame.font.SysFont("comicsansms", 35).render("Generation: " + str(current_generation), True, (255,0,0))
+            value = pygame.font.SysFont("comicsansms", 14).render("Generation: " + str(current_generation), True, (255,0,0))
             self.display.blit(value, [0, 0])
-            value = pygame.font.SysFont("comicsansms", 35).render("Max Score: " + str(max_score), True, (255,0,0))
+            value = pygame.font.SysFont("comicsansms", 14).render("Individual: " + str(snake_index + 1) + "/" + str(population), True, (255,0,0))
+            self.display.blit(value, [0, 30])
+            value = pygame.font.SysFont("comicsansms", 14).render("Current Score: " + str(snake.get_fitness()), True, (255,0,0))
             self.display.blit(value, [0, 60])
+            value = pygame.font.SysFont("comicsansms", 14).render("Max Score: " + str(max_score), True, (255,0,0))
+            self.display.blit(value, [0, 90])
 
             pygame.display.update()
 
-            #handle snake eating food
-            for snake in self.snake_list:
-                # Eat food 
-                if snake.x == snake.food_x and snake.y == snake.food_y:
-                    snake.food_x = round(random.randrange(0, snake.width - 10) / 10.0) * 10.0
-                    snake.food_y = round(random.randrange(0, snake.height - 10) / 10.0) * 10.0
+            # Eat food 
+            if snake.x == snake.food_x and snake.y == snake.food_y:
+                snake.food_x = round(random.randrange(0, snake.width - 10) / 10.0) * 10.0
+                snake.food_y = round(random.randrange(0, snake.height - 10) / 10.0) * 10.0
 
-                    # increase length of snake
-                    snake.length_of_snake += 1
+                snake.fitness += 1000
 
-            pygame.time.Clock().tick(self.snake_speed)
-            seconds = ((pygame.time.get_ticks() - start_ticks) / 1000)
+                # increase length of snake
+                snake.length_of_snake += 1
+
+            clock.tick(self.snake_speed)
+            snake.life_span = step
+
+            
+        return snake.get_fitness()
 
     def start(self):
-        max_score = 0
         for generation_number in range(self.generations):
-            self.run(generation_number, max_score)
+            max_score = 0
+            for snake_index in range(population):
+                score = self.run(generation_number, max_score, snake_index)
+                if score > max_score:
+                    max_score = score
 
-            # add up total score of generation for weights
             total_score = 0
-            for snake in self.snake_list:
-                fitness = snake.get_fitness()
-                if fitness > max_score:
-                    max_score = fitness
 
-                total_score += fitness
+            for snake in self.snake_list:
+                total_score += snake.get_fitness()
 
             if total_score == 0:
                 snake_weights = [(1.0/len(self.snake_list))] * len(self.snake_list)
@@ -436,10 +442,10 @@ class SnakeGame():
         quit()
     
 
-game_speed = 50
-population = 500
-number_of_generations = 5000
-life_span_per_generation = 30
+game_speed = 500
+population = 250
+number_of_generations = 10000
+life_span_per_generation = 300
 
 snake_game = SnakeGame(500, 500, game_speed, population, number_of_generations, life_span_per_generation)
 snake_game.start()
