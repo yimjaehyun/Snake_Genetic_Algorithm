@@ -37,7 +37,6 @@ class Snake():
             keras.layers.Dense(4, activation='sigmoid') # output layer
         ])
 
-
         model.compile(optimizer='adam',
                 loss='sparse_categorical_crossentropy',
                 metrics=['accuracy'])
@@ -81,6 +80,25 @@ class Snake():
 
         def diagonal_distance(a,b):
             return math.sqrt( ((a[0]-b[0])**2)+((a[1]-b[1])**2) ) / math.sqrt(self.height ** 2 + self.width ** 2)
+
+        def get_view(x, y, x_add_value, y_add_value):
+            food_dist = 1
+            wall_dist = 1
+            self_dist = 1
+            current_search_pos = [x+x_add_value, y+y_add_value]
+            while current_search_pos[0] >= 0 and current_search_pos[0] <= self.width and current_search_pos[1] >= 0 and current_search_pos[1] <= self.height:
+                if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
+                    food_dist = distance([x, y], current_search_pos)
+                if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
+                    self_dist = distance([x, y], [current_search_pos])
+
+                current_search_pos[0] += x_add_value
+                current_search_pos[1] += y_add_value
+
+            wall_dist = diagonal_distance([x, y], current_search_pos)
+
+            return [food_dist, wall_dist, self_dist]
+
 
         #region get views
         #[food_dist, wall_dist, self_dist]
@@ -184,6 +202,7 @@ class Snake():
             food_dist = 1
             wall_dist = 1
             self_dist = 1
+            r = math.sqrt((x+1)**2 + (self.height - y + 1)**2)
             for i in range(0, x + 10, 10):
                 current_search_pos = [x-i, y+i]
                 if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
@@ -218,7 +237,7 @@ class Snake():
                 get_left_view(self.x, self.y), get_right_view(self.x, self.y),
                 get_bottom_left_view(self.x, self.y), get_bottom_view(self.x, self.y), get_bottom_right_view(self.x, self.y)]
         # x = [[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)]]
-        # print(x[0][0], x[1][0], x[2][0], x[3][0], x[4][0], x[5][0], x[6][0], x[7][0])
+        print("top_left:",x[0][1], " top:", x[1][1], " top_right:", x[2][1], " left", x[3][1], " right", x[4][1], " bottom_left", x[5][1], " bottom", x[6][1], " bottom_right", x[7][1])
         return x
 
     def get_fitness(self):
@@ -390,6 +409,7 @@ class SnakeGame():
                 for snake in self.snake_list:
                     snake_weights.append(snake.get_fitness()/total_score)
 
+
             new_weights_list = []
             # crossover & mutate
             for i in range(self.population):
@@ -401,9 +421,9 @@ class SnakeGame():
                 new_weights = self.crosover(snake1_index, snake2_index)
 
                 # mutate that new child
-                mutated_new_weights = self.mutate(new_weights[0])
+                mutated_new_weights1 = self.mutate(new_weights[0])
 
-                new_weights_list.append(mutated_new_weights)
+                new_weights_list.append(mutated_new_weights1)
 
                 # reset snakes
                 self.snake_list[i].reset()
@@ -432,7 +452,7 @@ class SnakeGame():
     def mutate(self, weights):
         for i in range(len(weights)):
             for j in range(len(weights[i])):
-                if random.uniform(0,1) > .90:
+                if random.uniform(0,1) > .85:
                     change = random.uniform(-0.5, 0.5)
                     weights[i][j] += change
         return weights
@@ -442,8 +462,8 @@ class SnakeGame():
         quit()
     
 
-game_speed = 500
-population = 250
+game_speed = 3
+population = 6
 number_of_generations = 10000
 life_span_per_generation = 300
 
