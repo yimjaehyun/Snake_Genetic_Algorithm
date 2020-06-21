@@ -100,144 +100,17 @@ class Snake():
             return [food_dist, wall_dist, self_dist]
 
 
-        #region get views
-        #[food_dist, wall_dist, self_dist]
-        def get_top_left_view(x, y):
-            food_dist = 1
-            wall_dist = 1
-            self_dist = 1
-            for i in range(0, x+10, 10):
-                current_search_pos = [x-i, y-i]
-                if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = diagonal_distance([x, y], current_search_pos)
-                if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = diagonal_distance([x, y], current_search_pos)
-                if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
-                    if self_dist == -1:
-                        self_dist = diagonal_distance([x, y], [current_search_pos])
-
-            return [food_dist, wall_dist, self_dist]
-
-        def get_top_view(x, y):
-            food_dist = 1
-            wall_dist = 1
-            self_dist = 1
-            for i in range(0, y + 10, 10):
-                current_search_pos = [x, y-i]
-                if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = distance([x, y],  current_search_pos)
-                if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = distance([x, y], current_search_pos)
-                if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
-                    if self_dist == -1:
-                        self_dist = distance([x, y], [current_search_pos])
-
-            return [food_dist, wall_dist, self_dist]
-
-        def get_top_right_view(x, y):
-            food_dist = 1
-            wall_dist = 1
-            self_dist = 1
-            for i in range(0, self.width - x + 10, 10):
-                current_search_pos = [x+i, y-i]
-                if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = diagonal_distance([x, y], current_search_pos)
-                if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = diagonal_distance([x, y],  current_search_pos)
-                if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
-                    if self_dist == -1:
-                        self_dist = diagonal_distance([x, y],  [current_search_pos])
-
-            return [food_dist, wall_dist, self_dist]
-
-        def get_right_view(x, y):
-            food_dist = 1
-            wall_dist = 1
-            self_dist = 1
-            for i in range(0, self.width - x + 10, 10):
-                current_search_pos = [x+i, y]
-                if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = distance([x, y], current_search_pos)
-                if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = distance([x, y], current_search_pos)
-                if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
-                    if self_dist == -1:
-                        self_dist = distance([x, y], [current_search_pos])
-
-            return [food_dist, wall_dist, self_dist]
-
-        def get_bottom_right_view(x, y):
-            food_dist = 1
-            wall_dist = 1
-            self_dist = 1
-            for i in range(0, self.width - x + 10, 10):
-                current_search_pos = [x+i, y+i]
-                if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = diagonal_distance([x, y], current_search_pos)
-                if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = diagonal_distance([x, y], current_search_pos)
-                if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
-                    if self_dist == -1:
-                        self_dist = diagonal_distance([x, y], [current_search_pos])
-
-            return [food_dist, wall_dist, self_dist]
-
-        def get_bottom_view(x, y):
-            food_dist = 1
-            wall_dist = 1
-            self_dist = 1
-            for i in range(0, self.height - y + 10, 10):
-                current_search_pos = [x, y+i]
-                if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = distance([x, y], current_search_pos)
-                if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = distance([x, y], current_search_pos)
-                if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
-                    if self_dist == -1:
-                        self_dist = distance([x, y], [current_search_pos])
-
-            return [food_dist, wall_dist, self_dist]
-
-        def get_bottom_left_view(x, y):
-            food_dist = 1
-            wall_dist = 1
-            self_dist = 1
-            r = math.sqrt((x+1)**2 + (self.height - y + 1)**2)
-            for i in range(0, x + 10, 10):
-                current_search_pos = [x-i, y+i]
-                if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = diagonal_distance([x, y], current_search_pos)
-                if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = diagonal_distance([x, y], current_search_pos)
-                if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
-                    if self_dist == -1:
-                        self_dist = diagonal_distance([x, y], [current_search_pos])
-
-            return [food_dist, wall_dist, self_dist]
-
-        def get_left_view(x, y):
-            food_dist = 1
-            wall_dist = 1
-            self_dist = 1
-            for i in range(0, x + 10, 10):
-                current_search_pos = [x-i, y]
-                if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
-                    food_dist = distance([x, y], current_search_pos)
-                if current_search_pos[0] <= 0 or current_search_pos[0] >= self.width or current_search_pos[1] >= self.height or current_search_pos[1] <= 0:
-                    wall_dist = distance([x, y], current_search_pos)
-                if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
-                    if self_dist == -1:
-                        self_dist = distance([x, y], [current_search_pos])
-
-            return [food_dist, wall_dist, self_dist]
 
         #endregion
         
-        x =  [get_top_left_view(self.x, self.y), get_top_view(self.x, self.y), get_top_right_view(self.x, self.y),
-                get_left_view(self.x, self.y), get_right_view(self.x, self.y),
-                get_bottom_left_view(self.x, self.y), get_bottom_view(self.x, self.y), get_bottom_right_view(self.x, self.y)]
+        x =  [get_view(self.x, self.y, -10, -10), get_view(self.x, self.y, 0, -10), get_view(self.x, self.y, 10, -10),
+                get_view(self.x, self.y, -10, 0), get_view(self.x, self.y, 10, 0),
+                get_view(self.x, self.y, -10, 10), get_view(self.x, self.y, 0, 10), get_view(self.x, self.y, 10, 10)]
+
         # x = [[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)]]
-        print("top_left:",x[0][1], " top:", x[1][1], " top_right:", x[2][1], " left", x[3][1], " right", x[4][1], " bottom_left", x[5][1], " bottom", x[6][1], " bottom_right", x[7][1])
+        #print("top_left:",x[0][1], " top:", x[1][1], " top_right:", x[2][1], " left", x[3][1], " right", x[4][1], " bottom_left", x[5][1], " bottom", x[6][1], " bottom_right", x[7][1])
+        #print("top_left:",x[0][0], " top:", x[1][0], " top_right:", x[2][0], " left", x[3][0], " right", x[4][0], " bottom_left", x[5][0], " bottom", x[6][0], " bottom_right", x[7][0])
+        #print("top_left:",x[0][2], " top:", x[1][2], " top_right:", x[2][2], " left", x[3][2], " right", x[4][2], " bottom_left", x[5][2], " bottom", x[6][2], " bottom_right", x[7][2])
         return x
 
     def get_fitness(self):
@@ -347,10 +220,7 @@ class SnakeGame():
                 del snake.snake_list[0]
 
             # update score 
-            if pygame.time.get_ticks()-timer > 500:
-                timer = pygame.time.get_ticks()
-                snake.fitness += 1
-                #do something every 1.5 seconds
+            snake.fitness += 1
 
             # draw snake
             # reset everything to black before drawing
@@ -409,6 +279,8 @@ class SnakeGame():
                 for snake in self.snake_list:
                     snake_weights.append(snake.get_fitness()/total_score)
 
+            print(snake_weights)
+
 
             new_weights_list = []
             # crossover & mutate
@@ -416,6 +288,8 @@ class SnakeGame():
                 # select 2 parents
                 snake1_index = np.random.choice(range(len(self.snake_list)), p=snake_weights)
                 snake2_index = np.random.choice(range(len(self.snake_list)), p=snake_weights)
+
+                print(snake1_index, snake2_index)
 
                 # crossover those 2 parents
                 new_weights = self.crosover(snake1_index, snake2_index)
@@ -462,8 +336,8 @@ class SnakeGame():
         quit()
     
 
-game_speed = 3
-population = 6
+game_speed = 1000
+population = 10
 number_of_generations = 10000
 life_span_per_generation = 300
 
