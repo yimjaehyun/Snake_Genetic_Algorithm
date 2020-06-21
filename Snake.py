@@ -86,7 +86,7 @@ class Snake():
             wall_dist = 1
             self_dist = 1
             current_search_pos = [x+x_add_value, y+y_add_value]
-            while current_search_pos[0] >= 0 and current_search_pos[0] <= self.width and current_search_pos[1] >= 0 and current_search_pos[1] <= self.height:
+            while current_search_pos[0] > 0 and current_search_pos[0] < self.width and current_search_pos[1] > 0 and current_search_pos[1] < self.height:
                 if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
                     food_dist = distance([x, y], current_search_pos)
                 if (current_search_pos[0], current_search_pos[1]) in self.snake_list:
@@ -95,7 +95,8 @@ class Snake():
                 current_search_pos[0] += x_add_value
                 current_search_pos[1] += y_add_value
 
-            wall_dist = diagonal_distance([x, y], current_search_pos)
+            #print(current_search_pos, self.x, self.y)
+            wall_dist = distance([x, y], current_search_pos)
 
             return [food_dist, wall_dist, self_dist]
 
@@ -108,7 +109,7 @@ class Snake():
                 get_view(self.x, self.y, -10, 10), get_view(self.x, self.y, 0, 10), get_view(self.x, self.y, 10, 10)]
 
         # x = [[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)]]
-        #print("top_left:",x[0][1], " top:", x[1][1], " top_right:", x[2][1], " left", x[3][1], " right", x[4][1], " bottom_left", x[5][1], " bottom", x[6][1], " bottom_right", x[7][1])
+        print("top_left:",x[0][1], " top:", x[1][1], " top_right:", x[2][1], " left", x[3][1], " right", x[4][1], " bottom_left", x[5][1], " bottom", x[6][1], " bottom_right", x[7][1])
         #print("top_left:",x[0][0], " top:", x[1][0], " top_right:", x[2][0], " left", x[3][0], " right", x[4][0], " bottom_left", x[5][0], " bottom", x[6][0], " bottom_right", x[7][0])
         #print("top_left:",x[0][2], " top:", x[1][2], " top_right:", x[2][2], " left", x[3][2], " right", x[4][2], " bottom_left", x[5][2], " bottom", x[6][2], " bottom_right", x[7][2])
         return x
@@ -165,7 +166,7 @@ class SnakeGame():
             snake_list.append(Snake(self.width, self.height))
         return snake_list
 
-    def run(self, current_generation, max_score, snake_index):
+    def run(self, current_generation, best_snake_index, max_score, snake_index):
         dead_snake_count = 0
         start_ticks = pygame.time.get_ticks()
         timer = start_ticks
@@ -219,9 +220,6 @@ class SnakeGame():
             if len(snake.snake_list) > snake.length_of_snake:
                 del snake.snake_list[0]
 
-            # update score 
-            snake.fitness += 1
-
             # draw snake
             # reset everything to black before drawing
             self.display.fill((0, 0, 0))
@@ -238,7 +236,7 @@ class SnakeGame():
             self.display.blit(value, [0, 30])
             value = pygame.font.SysFont("comicsansms", 14).render("Current Score: " + str(snake.get_fitness()), True, (255,0,0))
             self.display.blit(value, [0, 60])
-            value = pygame.font.SysFont("comicsansms", 14).render("Max Score: " + str(max_score), True, (255,0,0))
+            value = pygame.font.SysFont("comicsansms", 14).render("Max Score: " + str(best_snake_index) + ": " + str(max_score), True, (255,0,0))
             self.display.blit(value, [0, 90])
 
             pygame.display.update()
@@ -261,16 +259,20 @@ class SnakeGame():
 
     def start(self):
         for generation_number in range(self.generations):
-            max_score = 0
-            for snake_index in range(population):
-                score = self.run(generation_number, max_score, snake_index)
-                if score > max_score:
-                    max_score = score
-
             total_score = 0
+            is_better_generation = False
 
-            for snake in self.snake_list:
-                total_score += snake.get_fitness()
+            max_score = 0
+            best_snake_index = 0
+            best_weights = []
+            for snake_index in range(population):
+                score = self.run(generation_number, best_snake_index, max_score, snake_index)
+                if score > max_score:
+                    best_snake_index = snake_index
+                    max_score = score
+                    is_better_generation = True
+                    best_weights = self.snake_list[snake_index].nn.get_weights()
+                total_score += score
 
             if total_score == 0:
                 snake_weights = [(1.0/len(self.snake_list))] * len(self.snake_list)
@@ -279,8 +281,7 @@ class SnakeGame():
                 for snake in self.snake_list:
                     snake_weights.append(snake.get_fitness()/total_score)
 
-            print(snake_weights)
-
+            #print(snake_weights)
 
             new_weights_list = []
             # crossover & mutate
@@ -289,10 +290,14 @@ class SnakeGame():
                 snake1_index = np.random.choice(range(len(self.snake_list)), p=snake_weights)
                 snake2_index = np.random.choice(range(len(self.snake_list)), p=snake_weights)
 
-                print(snake1_index, snake2_index)
+                #print(snake1_index, snake2_index)
 
                 # crossover those 2 parents
                 new_weights = self.crosover(snake1_index, snake2_index)
+                
+                # if new population is not better than previous, set to previous best snake
+                if not is_better_generation:
+                    new_weights[0] = best_weights
 
                 # mutate that new child
                 mutated_new_weights1 = self.mutate(new_weights[0])
@@ -337,7 +342,7 @@ class SnakeGame():
     
 
 game_speed = 1000
-population = 10
+population = 250
 number_of_generations = 10000
 life_span_per_generation = 300
 
