@@ -115,7 +115,7 @@ class Snake():
         return x
 
     def get_fitness(self):
-        return self.life_span * self.life_span * 2 ** self.length_of_snake
+        return self.life_span + (((2 ** self.length_of_snake) + (self.length_of_snake**2.1) * 500) - ((self.length_of_snake**1.2) * (0.25 * self.length_of_snake) ** 1.3))
 
     def is_colliding(self):
         return self.x >= self.width or self.x <= 0 or self.y >= self.height or self.y <= 0
@@ -291,7 +291,7 @@ class SnakeGame():
 
             new_weights_list = []
             # crossover & mutate
-            for i in range(self.population//2):
+            for i in range(self.population):
                 # select 2 parents
                 snake1_index = np.random.choice(range(len(self.snake_list)), p=snake_weights)
                 snake2_index = np.random.choice(range(len(self.snake_list)), p=snake_weights)
