@@ -32,7 +32,7 @@ class Snake():
     # create brain of snake
     def create_model(self):
         model = keras.Sequential([
-            keras.layers.Dense(24, activation='relu'),  # input layer
+            keras.layers.Flatten(input_shape=(24,)),  # input layer
             keras.layers.Dense(18, activation='relu'),  # hidden layer 1
             keras.layers.Dense(18, activation='relu'),  # hidden layer 2
             keras.layers.Dense(4, activation='sigmoid') # output layer
@@ -66,6 +66,7 @@ class Snake():
     # right = 3
     def get_next_move(self, snake_views):
         input_data = np.asarray(snake_views).flatten()
+        input_data = np.atleast_2d(input_data)
 
         prediction = self.nn.predict(input_data)[0]
         # x = ["up", "down", "left", "right"]
@@ -335,24 +336,19 @@ class SnakeGame():
         new_weight1 = parent_weight1.copy()
         new_weight2 = parent_weight2.copy()
 
-        num_layers = len(new_weight1[0])
+        num_layers = len(new_weight1)
+
         for i in range(0, num_layers, 2): # skip every other since it inlcudes the biases
             connections = parent_weight1[i][0] # gets the array wrapped in 2d 
             # print(connections)
 
-            for j in range(connections):
+            for j in range(len(connections)):
                 if random.uniform(0, 1) < .5:
                     temp1 = new_weight1[i][0][j]
                     temp2 = new_weight2[i][0][j]
 
-                    print(new_weight1[i][0][j])
-                    print(new_weight2[i][0][j])
-
                     new_weight1[i][0][j] = temp2
                     new_weight2[i][0][j] = temp1
-
-                    print(new_weight1[i][0][j])
-                    print(new_weight2[i][0][j])
 
         return np.asarray([new_weight1, new_weight2])
 
@@ -370,7 +366,7 @@ class SnakeGame():
     
 
 game_speed = 1000
-population = 10
+population = 250
 number_of_generations = 10000
 life_span_per_generation = 500
 
