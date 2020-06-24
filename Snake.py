@@ -9,7 +9,7 @@ import numpy as np
 import math
 
 class Snake():
-    def __init__(self, width, height):
+    def __init__(self, width, height, life_span):
         self.nn = self.create_model()
         self.snake_list = []
         self.length_of_snake = 1
@@ -20,13 +20,14 @@ class Snake():
         self.y = height // 2
         self.x_change = 0
         self.y_change = 0
-        self.life_span = 0
+        self.life_span = life_span
+        self.life_span2 = life_span
+        self.steps = 0
 
         self.fitness = 0
 
         self.food_x = round(random.randrange(0, self.width - 10) / 10.0) * 10.0
         self.food_y = round(random.randrange(0, self.height - 10) / 10.0) * 10.0
-
 
     # create brain of snake
     def create_model(self):
@@ -65,26 +66,21 @@ class Snake():
     # right = 3
     def get_next_move(self, snake_views):
         input_data = np.asarray(snake_views).flatten()
-        input_data = np.atleast_2d(input_data)
-
 
         prediction = self.nn.predict(input_data)[0]
-        x = ["up", "down", "left", "right"]
+        # x = ["up", "down", "left", "right"]
         # print(x[np.argmax(prediction)])
         # print(prediction)
         return np.argmax(prediction)
 
     def get_snake_views(self):
         def distance(a, b):
-            return math.sqrt( ((a[0]-b[0])**2)+((a[1]-b[1])**2) ) / self.height
-
-        def diagonal_distance(a,b):
-            return math.sqrt( ((a[0]-b[0])**2)+((a[1]-b[1])**2) ) / math.sqrt(self.height ** 2 + self.width ** 2)
+            return math.sqrt( ((a[0]-b[0])**2)+((a[1]-b[1])**2) ) / (math.sqrt(((self.width ** 2) + (self.width ** 2))))
 
         def get_view(x, y, x_add_value, y_add_value):
-            food_dist = 1
-            wall_dist = 1
-            self_dist = 1
+            food_dist = 0
+            wall_dist = 0
+            self_dist = 0
             current_search_pos = [x+x_add_value, y+y_add_value]
             while current_search_pos[0] > 0 and current_search_pos[0] < self.width and current_search_pos[1] > 0 and current_search_pos[1] < self.height:
                 if current_search_pos[0] == self.food_x and current_search_pos[1] == self.food_y:
@@ -101,21 +97,17 @@ class Snake():
             return [food_dist, wall_dist, self_dist]
 
 
-
-        #endregion
-        
         x =  [get_view(self.x, self.y, -10, -10), get_view(self.x, self.y, 0, -10), get_view(self.x, self.y, 10, -10),
                 get_view(self.x, self.y, -10, 0), get_view(self.x, self.y, 10, 0),
                 get_view(self.x, self.y, -10, 10), get_view(self.x, self.y, 0, 10), get_view(self.x, self.y, 10, 10)]
 
-        # x = [[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)],[random.uniform(0, 1), random.uniform(0, 1),random.uniform(0, 1)]]
+        # print("top_left:",x[0][0], " top:", x[1][0], " top_right:", x[2][0], " left", x[3][0], " right", x[4][0], " bottom_left", x[5][0], " bottom", x[6][0], " bottom_right", x[7][0])
         # print("top_left:",x[0][1], " top:", x[1][1], " top_right:", x[2][1], " left", x[3][1], " right", x[4][1], " bottom_left", x[5][1], " bottom", x[6][1], " bottom_right", x[7][1])
-        print("top_left:",x[0][0], " top:", x[1][0], " top_right:", x[2][0], " left", x[3][0], " right", x[4][0], " bottom_left", x[5][0], " bottom", x[6][0], " bottom_right", x[7][0])
-        #print("top_left:",x[0][2], " top:", x[1][2], " top_right:", x[2][2], " left", x[3][2], " right", x[4][2], " bottom_left", x[5][2], " bottom", x[6][2], " bottom_right", x[7][2])
+        # print("top_left:",x[0][2], " top:", x[1][2], " top_right:", x[2][2], " left", x[3][2], " right", x[4][2], " bottom_left", x[5][2], " bottom", x[6][2], " bottom_right", x[7][2])
         return x
 
     def get_fitness(self):
-        return self.life_span + (((2 ** self.length_of_snake) + (self.length_of_snake**2.1) * 500) - ((self.length_of_snake**1.2) * (0.25 * self.length_of_snake) ** 1.3))
+        return self.steps * self.length_of_snake ** self.length_of_snake
 
     def is_colliding(self):
         return self.x >= self.width or self.x <= 0 or self.y >= self.height or self.y <= 0
@@ -139,6 +131,8 @@ class Snake():
         self.x_change = 0
         self.y_change = 0
         self.fitness = 0
+        self.life_span = self.life_span2
+        self.steps = 0
 
         self.food_x = round(random.randrange(0, self.width - 10) / 10.0) * 10.0
         self.food_y = round(random.randrange(0, self.height - 10) / 10.0) * 10.0
@@ -163,7 +157,7 @@ class SnakeGame():
     def snake_list_init(self):
         snake_list = []
         for _ in range(self.population):
-            snake_list.append(Snake(self.width, self.height))
+            snake_list.append(Snake(self.width, self.height, self.life_span))
         return snake_list
 
     def run(self, current_generation, best_snake_index, max_score, snake_index):
@@ -173,7 +167,7 @@ class SnakeGame():
         clock =pygame.time.Clock()
 
         snake = self.snake_list[snake_index]
-        for step in range(self.life_span):
+        while snake.life_span >= 0:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.quit()
@@ -251,8 +245,12 @@ class SnakeGame():
                 # increase length of snake
                 snake.length_of_snake += 1
 
+                # reset lifespan
+                snake.life_span = self.life_span
+
             clock.tick(self.snake_speed)
-            snake.life_span = step
+            snake.steps += 1
+            snake.life_span -= 1
 
             
         return snake.get_fitness()
@@ -261,25 +259,19 @@ class SnakeGame():
         max_score = 0
         for generation_number in range(self.generations):
             total_score = 0
-            is_better_generation = False
-
-            previous_max_score = max_score
             max_score = 0
             best_snake_index = 0
-            best_weights = []
+
             for snake_index in range(population):
                 score = self.run(generation_number, best_snake_index, max_score, snake_index)
                 if score > max_score:
                     best_snake_index = snake_index
                     max_score = score
-                    best_weights = self.snake_list[snake_index].nn.get_weights()
 
                 total_score += score
 
-            if max_score >= previous_max_score:
-                is_better_generation = True
 
-
+            # get snake weights
             if total_score == 0:
                 snake_weights = [(1.0/len(self.snake_list))] * len(self.snake_list)
             else:
@@ -287,36 +279,52 @@ class SnakeGame():
                 for snake in self.snake_list:
                     snake_weights.append(snake.get_fitness()/total_score)
 
-            #print(snake_weights)
-
             new_weights_list = []
             # crossover & mutate
-            for i in range(self.population):
+            for i in range(self.population//2):
                 # select 2 parents
                 snake1_index = np.random.choice(range(len(self.snake_list)), p=snake_weights)
                 snake2_index = np.random.choice(range(len(self.snake_list)), p=snake_weights)
 
-                #print(snake1_index, snake2_index)
+                # print(snake1_index, snake2_index)
 
                 # crossover those 2 parents
                 new_weights = self.crosover(snake1_index, snake2_index)
                 
-                # if new population is not better than previous, set to previous best snake
-                if not is_better_generation:
-                    new_weights[0] = best_weights
-
                 # mutate that new child
                 mutated_new_weights1 = self.mutate(new_weights[0])
+                mutated_new_weights2 = self.mutate(new_weights[1])
 
                 new_weights_list.append(mutated_new_weights1)
+                new_weights_list.append(mutated_new_weights2)
 
+
+            for i in range(len(new_weights_list)):
                 # reset snakes
                 self.snake_list[i].reset()
 
-
-            # update population weights with new children
-            for i in range(len(new_weights_list)):
                 self.snake_list[i].nn.set_weights(new_weights_list[i])
+
+
+            # new_weights_list = [self.snake_list[best_parent_index1].nn.get_weights(), self.snake_list[best_parent_index2].nn.get_weights()]
+            # for i in range(self.population//2 - 2):
+            #     #crossover
+            #     new_weights = self.crosover(best_parent_index1, best_parent_index2)
+
+            #     #mutate
+            #     mutated_new_weights1 = self.mutate(new_weights[0])
+            #     mutated_new_weights2 = self.mutate(new_weights[1])
+
+            #     new_weights_list.append(mutated_new_weights1)
+            #     new_weights_list.append(mutated_new_weights2)
+
+            # for i in range(len(new_weights_list)):
+            #     # reset snakes
+            #     self.snake_list[i].reset()
+
+            #     print(np.shape(self.snake_list[i].nn.layers[0].get_weights()[1]))
+
+            #     self.snake_list[i].nn.set_weights(new_weights_list[i])
 
 
     # returns list of new weights
@@ -324,20 +332,34 @@ class SnakeGame():
         parent_weight1 = self.snake_list[snake1_index].nn.get_weights()
         parent_weight2 = self.snake_list[snake2_index].nn.get_weights()
 
-        new_weight1 = parent_weight1
-        new_weight2 = parent_weight2
+        new_weight1 = parent_weight1.copy()
+        new_weight2 = parent_weight2.copy()
 
-        gene = random.randint(0, len(new_weight1)-1)
+        num_layers = len(new_weight1[0])
+        for i in range(0, num_layers, 2): # skip every other since it inlcudes the biases
+            connections = parent_weight1[i][0] # gets the array wrapped in 2d 
+            # print(connections)
 
-        new_weight1[gene] = parent_weight2[gene]
-        new_weight2[gene] = parent_weight1[gene]
+            for j in range(connections):
+                if random.uniform(0, 1) < .5:
+                    temp1 = new_weight1[i][0][j]
+                    temp2 = new_weight2[i][0][j]
+
+                    print(new_weight1[i][0][j])
+                    print(new_weight2[i][0][j])
+
+                    new_weight1[i][0][j] = temp2
+                    new_weight2[i][0][j] = temp1
+
+                    print(new_weight1[i][0][j])
+                    print(new_weight2[i][0][j])
 
         return np.asarray([new_weight1, new_weight2])
 
     def mutate(self, weights):
         for i in range(len(weights)):
             for j in range(len(weights[i])):
-                if random.uniform(0,1) > .85:
+                if random.uniform(0,1) > .90:
                     change = random.uniform(-0.5, 0.5)
                     weights[i][j] += change
         return weights
@@ -348,9 +370,9 @@ class SnakeGame():
     
 
 game_speed = 1000
-population = 250
+population = 10
 number_of_generations = 10000
-life_span_per_generation = 300
+life_span_per_generation = 500
 
 snake_game = SnakeGame(500, 500, game_speed, population, number_of_generations, life_span_per_generation)
 snake_game.start()
