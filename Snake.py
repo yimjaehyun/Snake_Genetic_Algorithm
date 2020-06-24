@@ -263,31 +263,35 @@ class SnakeGame():
             max_score = 0
             best_snake_index = 0
 
+            score_list = []
             for snake_index in range(population):
                 score = self.run(generation_number, best_snake_index, max_score, snake_index)
                 if score > max_score:
                     best_snake_index = snake_index
                     max_score = score
 
-                total_score += score
+                score_list.append(score)
+
+            sorted_highest_index_list = sorted(range(len(score_list)), key=lambda i: score_list[i], reverse = True)
+
+            # only get scores of top 20% of population
+            for i in range(int(self.population * 0.20)):
+                total_score += self.snake_list[sorted_highest_index_list[i]].get_fitness()
 
 
-            # get snake weights
-            if total_score == 0:
-                snake_weights = [(1.0/len(self.snake_list))] * len(self.snake_list)
-            else:
-                snake_weights = []
-                for snake in self.snake_list:
-                    snake_weights.append(snake.get_fitness()/total_score)
+            # get snake weights of top 20% of population rest are 0
+            snake_weights = [0] * self.population
+            for i in range(int(self.population * 0.20)):
+                snake_index = sorted_highest_index_list[i]
+                snake = self.snake_list[snake_index]
+                snake_weights[snake_index] = snake.get_fitness()/total_score
 
             new_weights_list = []
             # crossover & mutate
             for i in range(self.population//2):
                 # select 2 parents
-                snake1_index = np.random.choice(range(len(self.snake_list)), p=snake_weights)
-                snake2_index = np.random.choice(range(len(self.snake_list)), p=snake_weights)
-
-                # print(snake1_index, snake2_index)
+                snake1_index = np.random.choice(range(len(snake_weights)), p=snake_weights)
+                snake2_index = np.random.choice(range(len(snake_weights)), p=snake_weights)
 
                 # crossover those 2 parents
                 new_weights = self.crosover(snake1_index, snake2_index)
@@ -299,34 +303,11 @@ class SnakeGame():
                 new_weights_list.append(mutated_new_weights1)
                 new_weights_list.append(mutated_new_weights2)
 
-
             for i in range(len(new_weights_list)):
                 # reset snakes
                 self.snake_list[i].reset()
 
                 self.snake_list[i].nn.set_weights(new_weights_list[i])
-
-
-            # new_weights_list = [self.snake_list[best_parent_index1].nn.get_weights(), self.snake_list[best_parent_index2].nn.get_weights()]
-            # for i in range(self.population//2 - 2):
-            #     #crossover
-            #     new_weights = self.crosover(best_parent_index1, best_parent_index2)
-
-            #     #mutate
-            #     mutated_new_weights1 = self.mutate(new_weights[0])
-            #     mutated_new_weights2 = self.mutate(new_weights[1])
-
-            #     new_weights_list.append(mutated_new_weights1)
-            #     new_weights_list.append(mutated_new_weights2)
-
-            # for i in range(len(new_weights_list)):
-            #     # reset snakes
-            #     self.snake_list[i].reset()
-
-            #     print(np.shape(self.snake_list[i].nn.layers[0].get_weights()[1]))
-
-            #     self.snake_list[i].nn.set_weights(new_weights_list[i])
-
 
     # returns list of new weights
     def crosover(self, snake1_index, snake2_index):
